@@ -6,7 +6,7 @@ const rest = require('./modules/rest.js');
 
 // const host = 'traffic-crazy-train.apps.rhods-internal.61tk.p1.openshiftapps.com';
 // const path = '/v2/models/traffic/infer';
-// const inputs = require("./payloads/exemple-payload.json");
+// const inputs = require("../payloads/exemple-payload.json");
 
 // (async function() { 
 //   resultPrediction = await rest.predictImage(host, path, inputs);
