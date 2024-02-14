@@ -10,7 +10,7 @@ This demo is a part of global demo "Stop The Crazy train" :
 
 ## Objectives
 
-Showcase a nodejs application that control a Lego Train Ref : 60337 [!(https://www.lego.com/en-fr/themes/city/train)] using Bluetooth, all commands are read from mqtt broker. 
+Showcase a nodejs application that control a  [Lego Train Ref : 60337](https://www.lego.com/en-fr/themes/city/train) using Bluetooth, all commands are read from mqtt broker. 
 The controller can :
 - discover the hub
 - start and stop the train
