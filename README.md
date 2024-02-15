@@ -20,7 +20,71 @@ The controller can :
 ### Prerequisites
  
 You will need:
+  - Podman 
   - Nodejs v20.7.0
-  - MQTT broker (docker image)
+  - MQTT broker (mosquitto docker image)
+  - MQTT cli
 
 
+### Local installation
+On linux
+```sh
+sudo dnf install -y podman
+sudo mkdir -p /tmp/mosquitto/{config,data,log}
+sudo tee /tmp/mosquitto/config/mosquitto.conf <<EOF
+    persistence true
+    persistence_location /mosquitto/data/
+    listener 1883 0.0.0.0
+    protocol mqtt
+    allow_anonymous true
+    log_dest file /mosquitto/log/mosquitto.log
+    EOF
+sudo dnf install -y mqttcli
+```
+On macos
+```sh
+mkdir -p /tmp/mosquitto/{config,data,log}
+tee /tmp/mosquitto/config/mosquitto.conf <<EOF
+    persistence true
+    persistence_location /mosquitto/data/
+    listener 1883 0.0.0.0
+    protocol mqtt
+    allow_anonymous true
+    log_dest file /mosquitto/log/mosquitto.log
+EOF
+brew install hivemq/mqtt-cli/mqtt-cli
+```
+### Test
+install package dependencies nodejs
+```sh
+>npm install index.js
+```
+run the mqtt broker on linux
+```sh
+>sudo podman run -d --rm --name mosquitto -p 1883:1883 -p 9001:9001 -v /tmp/mosquitto/config:/mosquitto/config:z -v /tmp/mosquitto/data:/mosquitto/data:z -v /tmp/mosquitto/log:/mosquitto/log:z docker.io/library/eclipse-mosquitto:2.0.18
+```
+run the mqtt broker on macos 
+```sh
+>podman run -d --rm --name mosquitto -p 1883:1883 -p 9001:9001 -v /Users/mouchan/projects/mosquitto/config:/mosquitto/config -v /Users/mouchan/projects/mosquitto/data:/mosquitto/data -v /Users/mouchan/projects/mosquitto/log:/mosquitto/log docker.io/library/eclipse-mosquitto:2.0.18
+```
+run the controller
+```sh 
+>node ./index.js                                                                                                                                                 ─╯
+Scanning for Hubs...
+connected to mqtt
+subscribed to topic  lego
+```
+send a command mqtt
+```sh
+>mqtt pub  -t lego -m "0" 
+Speed Limit to 30 set power to 30
+```
+Available commands 
+  ```text
+  0: "SpeedLimit_30",
+  1: "SpeedLimit_50",
+  2: "TrafficSignalsAhead",
+  3: "PedestiranCrossingAhead",
+  4: "RedTrafficLight",
+  5: "GreenTrafficLight" 
+  ```
