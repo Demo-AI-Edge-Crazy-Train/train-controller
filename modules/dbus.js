@@ -7,16 +7,31 @@ const systemBus = dbus.systemBus();
 const bluezService = systemBus.getService('org.bluez');
 
 // The path to the device will depend on your system
-const devicePath = '/org/bluez/hci0';
+//const devicePath = '/org/bluez/hci0';
 
 // Start scanning for devices
 exports.startScanning = function startScanning() {
-    bluezService.getInterface('/org/bluez/hci0', 'org.bluez.Adapter1', (err, adapterInterface) => {
+
+    bluezService.getInterface('/', 'org.freedesktop.DBus.ObjectManager', function(err, objectManagerInterface) {
         if (err) {
             console.error(err);
-            return;
+        } else {
+            objectManagerInterface.on('InterfacesAdded', function(path, interfaces) {
+                if ('org.bluez.Device1' in interfaces) {
+                    console.log('Device found: ' + path);
+                }
+            });
+
+            var adapterPath = '/org/bluez/hci0';
+
+            bluezService.getInterface(adapterPath, 'org.bluez.Adapter1', function(err, adapterInterface) {
+                if (err) {
+                    console.error(err);
+                } else {
+                    adapterInterface.StartDiscovery();
+                }
+            });
         }
-        adapterInterface.StartDiscovery();
     });
 }
 
