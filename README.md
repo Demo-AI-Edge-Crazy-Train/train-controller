@@ -67,6 +67,21 @@ run the mqtt broker on macos
 ```sh
 >podman run -d --rm --name mosquitto -p 1883:1883 -p 9001:9001 -v /Users/mouchan/projects/mosquitto/config:/mosquitto/config -v /Users/mouchan/projects/mosquitto/data:/mosquitto/data -v /Users/mouchan/projects/mosquitto/log:/mosquitto/log docker.io/library/eclipse-mosquitto:2.0.18
 ```
+on linux, you have to configure DBUS:
+```sh
+cat > /etc/dbus-1/system.d/node-ble.conf <<EOF
+<busconfig>
+  <policy user="$(id -un)">
+   <allow own="org.bluez"/>
+    <allow send_destination="org.bluez"/>
+    <allow send_interface="org.bluez.GattCharacteristic1"/>
+    <allow send_interface="org.bluez.GattDescriptor1"/>
+    <allow send_interface="org.freedesktop.DBus.ObjectManager"/>
+    <allow send_interface="org.freedesktop.DBus.Properties"/>
+  </policy>
+</busconfig>
+EOF
+```
 run the controller
 ```sh
 >export NOBLE_USE_BLUEZ_WITH_DBUS=true
