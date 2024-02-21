@@ -68,7 +68,9 @@ run the mqtt broker on macos
 >podman run -d --rm --name mosquitto -p 1883:1883 -p 9001:9001 -v /Users/mouchan/projects/mosquitto/config:/mosquitto/config -v /Users/mouchan/projects/mosquitto/data:/mosquitto/data -v /Users/mouchan/projects/mosquitto/log:/mosquitto/log docker.io/library/eclipse-mosquitto:2.0.18
 ```
 run the controller
-```sh 
+```sh
+>export NOBLE_USE_BLUEZ_WITH_DBUS=true
+>export DEBUG="bluez-dbus-bindings,poweredup,technicmediumhub,basehub"
 >node ./index.js                                                                                                                                                 ─╯
 Scanning for Hubs...
 connected to mqtt
