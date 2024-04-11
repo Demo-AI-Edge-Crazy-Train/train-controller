@@ -8,39 +8,23 @@ const poweredUP = new PoweredUP.PoweredUP();
     poweredUP.scan(); // Start scanning for Hubs
     console.log("Scanning for Hubs...");
     const clientmqtt = messages.connect('mqtt://localhost:1883');
-    messages.subscribeTopic(clientmqtt, 'lego');
+    messages.subscribeTopic(clientmqtt, 'train-command');
     poweredUP.on("discover", async (hub) => { // Wait to discover a Hub
         console.log(`Discovered ${hub.name}!`);
         await hub.connect(); // Connect to the Hub
         console.log("Connected");
         const motorB = await hub.waitForDeviceAtPort("B");
+        motorB.setPower(100); 
+        console.log("Set power to 100");
         clientmqtt.on('message', (topic, payload) => {
           console.log('Received Message:', topic, payload.toString());
-          if(payload.toString() === 'disconnect'){
-              hub.disconnect();
-          }else if(payload.toString() === 'connect'){
-              hub.connect();
-          } else if(payload.toString() === 'scan'){
-              poweredUP.scan();
-          } else if(payload.toString() === '0'){
+           if(payload.toString() === '0'){
               motorB.setPower(30); 
               console.log("Speed Limit to 30 set power to 30");
-          } else if(payload.toString() === '1'){
-              motorB.setPower(50); 
-              console.log("Speed Limit to 50 set power to 50");
-            } else if(payload.toString() === '2' || payload.toString() === '3' || payload.toString() === '4'){
+          } else {
                 motorB.brake();
-                if(payload.toString() === '2'){
-                  console.log("Traffic Signals Ahead set power to 0");
-                }else if(payload.toString() === '3'){
-                  console.log("Pedestrian Crossing Ahead set power to 0");
-                }else if(payload.toString() === '4'){
-                    console.log("Red traffic light set power to 0");  
-                }
-            } else if(payload.toString() === 'GreenTrafficLight'){
-                console.log("Green traffic light set power to 50");
-                motorB.setPower(50);
-            }
+                console.log("Stop motor B  ");
+            } 
         })
     });
 })()
