@@ -1,12 +1,12 @@
 const PoweredUP = require("node-poweredup").PoweredUP;
 const mqtt = require('mqtt');
 
-const legoPoweredUp = new PoweredUP();
-
+// Parse options from environment variables
 const mqttBrokerUrl = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
 const mqttTopic = process.env.MQTT_TOPIC || "train-command";
 const legoMotorMaxPower = parseInt(process.env.LEGO_MOTOR_MAX_POWER || "50", 10);
 
+// Action associated with each command id
 const actionMap = {
     // SpeedLimit_30
     0: async (motor, led, hub) => {
@@ -47,12 +47,7 @@ const actionMap = {
     }
 };
 
-var legoGear = {
-    hub: null,
-    motor: null,
-    led: null
-};
-
+// Connection to MQTT broker
 console.log("Connecting to MQTT broker %s...", mqttBrokerUrl);
 var mqttClient = mqtt.connect(mqttBrokerUrl);
 mqttClient.on('connect', () => {
@@ -64,6 +59,18 @@ mqttClient.on('connect', () => {
     });
 });
 
+// MQTT Disconnection handling
+mqttClient.on("close", () => {
+    console.log("Disconnected from MQTT server");
+    cleanupAndExit();
+});
+
+// MQTT Message processing
+var legoGear = {
+    hub: null,
+    motor: null,
+    led: null
+};
 var lastActionCode = -1;
 var actionInProgress = true;
 mqttClient.on('message', (topic, payload) => {
@@ -109,10 +116,8 @@ mqttClient.on('message', (topic, payload) => {
     });
 });
 
-mqttClient.on("close", () => {
-    console.log("Disconnected from MQTT server");
-});
-
+// Lego PoweredUP discovery
+const legoPoweredUp = new PoweredUP();
 legoPoweredUp.on("discover", async (hub) => {
     console.log(`Discovered ${hub.name}!`);
     // Stop the discovery process once we have a compatible Lego hub
@@ -121,6 +126,13 @@ legoPoweredUp.on("discover", async (hub) => {
     // Connect to the Hub
     await hub.connect();
     console.log("Connected to Lego Hub!");
+    hub.on("disconnect", () => {
+        legoGear = { hub: null, motor: null, led: null };
+        hub.connected = false;
+        hub.connecting = false;
+        console.log("Lego PoweredUp Hub disconnected!");
+        cleanupAndExit();
+    })
     legoGear.hub = hub;
 
     // Make sure a motor is plugged into port A
@@ -142,7 +154,14 @@ legoPoweredUp.on("discover", async (hub) => {
 console.log("Scanning for Lego PoweredUp Hubs...");
 legoPoweredUp.scan(); // Start scanning for Hubs
 
-function cleanup () {
+// Cleanup function
+var cleanupInProgress = false;
+function cleanupAndExit () {
+    if (cleanupInProgress) {
+        return;
+    }
+    cleanupInProgress = true;
+
     var promises = [];
     if (mqttClient != null && mqttClient.connected) {
         console.log("Disconnecting from MQTT Broker...");
@@ -152,11 +171,18 @@ function cleanup () {
     }
 
     if (legoGear.hub != null && (legoGear.hub.connected || legoGear.hub.connecting)) {
+        var hub = legoGear.hub;
         console.log("Disconnecting from Lego Hub...");
-        promises.push(legoGear.hub.disconnect().then(() => {
-            console.log("PoweredUp Hub disconnected!");
-            legoGear = { hub: null, motor: null, led: null };
-        }));
+        promises.push(
+            new Promise((resolve) => {
+                hub.on("disconnect", () => {
+                    resolve();
+                });
+                hub.disconnect();
+            }).catch((e) => {
+                console.log(e);
+            })
+        );
     }
 
     Promise.all(promises).then(() => {
@@ -165,5 +191,5 @@ function cleanup () {
     });
 }
 
-process.on('SIGTERM', cleanup);
-process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanupAndExit);
+process.on('SIGINT', cleanupAndExit);
