@@ -4,18 +4,10 @@
   "description": "Lego train controller",
   "main": "index.js",
   "scripts": {
-    "build:node": "tsc",
-    "build:browser": "webpack --mode=production",
-    "build:all": "npm run build:node && npm run build:browser",
-    "lint": "tslint -c tslint.json \"./src/**/*.ts\"",
-    "build": "npm run lint && npm run build:all",
-    "docs": "jsdoc -c jsdoc.json",
-    "all": "npm run build && npm run docs",
-    "prepublishOnly": "npm run lint && npm run build:node"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mouachan/train-controller.git"
+    "url": "https://github.com/Demo-AI-Edge-Crazy-Train/intelligent-train.git"
   },
   "keywords": [
     "Lego",
@@ -29,9 +21,9 @@
   "author": "Mourad Ouachani",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mouachan/train-controller/issues"
+    "url": "https://github.com/Demo-AI-Edge-Crazy-Train/intelligent-train/issues"
   },
-  "homepage": "https://github.com/mouachan/train-controller#readme",
+  "homepage": "https://github.com/Demo-AI-Edge-Crazy-Train/intelligent-train#readme",
   "dependencies": {
     "@grpc/grpc-js": "^1.10.0",
     "@grpc/proto-loader": "^0.7.10",
