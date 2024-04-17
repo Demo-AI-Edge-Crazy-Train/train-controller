@@ -1,5 +1,6 @@
 const PoweredUP = require("node-poweredup").PoweredUP;
 const mqtt = require('mqtt');
+const debug = require('debug')('train-controller');
 
 // Parse options from environment variables
 const mqttBrokerUrl = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
@@ -13,38 +14,23 @@ const actionMap = {
     0: async (motor, led, hub) => {
         console.log("Handling SpeedLimit_30...")
         await motor.setPower(legoMotorLowPower);
-    },
-    // SpeedLimit_50
-    1: async (motor, led, hub) => {
-        console.log("Handling SpeedLimit_50...")
-        await motor.setPower(legoMotorFullPower);
-    },
-    // TrafficSignalsAhead
-    2: async (motor, led, hub) => {
-        console.log("Handling TrafficSignalsAhead...")
-        // TODO
-    },
-    // PedestiranCrossingAhead
-    3: async (motor, led, hub) => {
-        console.log("Handling PedestiranCrossingAhead...")
-        await motor.rampPower(legoMotorFullPower, 0, 2000);
-        await motor.brake();
-    },
-    // RedTrafficLight
-    4: async (motor, led, hub) => {
-        console.log("Handling RedTrafficLight...")
-        await motor.brake();
-    },
-    // GreenTrafficLight
-    5: async (motor, led, hub) => {
-        console.log("Handling GreenTrafficLight...")
         for (i = 0; i < 2; i++) {
             await led.setBrightness(100);
             await hub.sleep(250);
             await led.setBrightness(0);
             await hub.sleep(250);
         }
-        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
+    },
+    // DangerAhead
+    1: async (motor, led, hub) => {
+        console.log("Handling DangerAhead...")
+        await motor.brake();
+        for (i = 0; i < 2; i++) {
+            await led.setBrightness(100);
+            await hub.sleep(250);
+            await led.setBrightness(0);
+            await hub.sleep(250);
+        }
     }
 };
 
@@ -55,7 +41,7 @@ mqttClient.on('connect', () => {
     console.log("Connected to MQTT broker %s!", mqttBrokerUrl);
     mqttClient.subscribe(mqttTopic, (err) => {
         if (!err) {
-            console.log("Subscribed to topic %s!", mqttTopic);
+            debug("Subscribed to topic %s!", mqttTopic);
         }
     });
 });
@@ -75,7 +61,7 @@ var legoGear = {
 var lastActionCode = -1;
 var actionInProgress = true;
 mqttClient.on('message', (topic, payload) => {
-    console.log('Received message on MQTT topic %s: %s', topic, payload.toString());
+    debug('Received message on MQTT topic %s: %s', topic, payload.toString());
     
     // the payload is a string representing an integer
     var actionCode = parseInt(payload.toString(), 10);
@@ -83,25 +69,25 @@ mqttClient.on('message', (topic, payload) => {
 
     // Safety check
     if (typeof action !== "function") {
-        console.log("Unknown action %s/%d...", payload.toString(), actionCode);
+        debug("Unknown action %s (int = %d)...", payload.toString(), actionCode);
         return;
     }
 
     // Safety check
     if (legoGear == null || legoGear.motor == null || legoGear.led == null) {
-        console.log("Not acting on %d since the Lego PoweredUp hub is not initialized yet!", actionCode);
+        debug("Not acting on %d since the Lego PoweredUp hub is not initialized yet!", actionCode);
         return;
     }
 
     // Ignore duplicate commands
     if (lastActionCode == actionCode) {
-        console.log("Ignoring duplicate command %d!", actionCode);
+        debug("Ignoring duplicate command %d!", actionCode);
         return;
     }
 
     // Do not accept commands if the previous one is still ongoing
     if (actionInProgress) {
-        console.log("Ignoring command %d since the last one (%d) is still ongoing...", actionCode, lastActionCode);
+        debug("Ignoring command %d since the last one (%d) is still ongoing...", actionCode, lastActionCode);
         return;
     }
 
@@ -187,7 +173,7 @@ function cleanupAndExit () {
     }
 
     Promise.all(promises).then(() => {
-        console.log("Cleanup done!");
+        debug("Cleanup done!");
         process.exit(0);
     });
 }

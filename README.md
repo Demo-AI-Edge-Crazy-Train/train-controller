@@ -119,7 +119,7 @@ All hardware pieces have been discovered!
 Send all MQTT commands sequentially.
 
 ```sh
-for cmd in `seq 0 5`; do mosquitto_pub -h localhost -p 1883 -t train-command -m "$cmd"; sleep 10; done
+for cmd in `seq 0 1`; do mosquitto_pub -h localhost -p 1883 -t train-command -m "$cmd"; sleep 10; done
 ```
 
 On the train-controller logs, you should see something like this.
@@ -129,29 +129,13 @@ Received message on MQTT topic train-command: 0
 Handling SpeedLimit_30...
 Processed command 0!
 Received message on MQTT topic train-command: 1
-Handling SpeedLimit_50...
+Handling DangerAhead...
 Processed command 1!
-Received message on MQTT topic train-command: 2
-Handling TrafficSignalsAhead...
-Processed command 2!
-Received message on MQTT topic train-command: 3
-Handling PedestiranCrossingAhead...
-Processed command 3!
-Received message on MQTT topic train-command: 4
-Handling RedTrafficLight...
-Processed command 4!
-Received message on MQTT topic train-command: 5
-Handling GreenTrafficLight...
-Processed command 5!
 ```
 
 ## Available commands
 
   ```text
   0: "SpeedLimit_30",
-  1: "SpeedLimit_50",
-  2: "TrafficSignalsAhead",
-  3: "PedestiranCrossingAhead",
-  4: "RedTrafficLight",
-  5: "GreenTrafficLight" 
+  1: "DangerAhead",
   ```
