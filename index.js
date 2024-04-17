@@ -4,19 +4,20 @@ const mqtt = require('mqtt');
 // Parse options from environment variables
 const mqttBrokerUrl = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
 const mqttTopic = process.env.MQTT_TOPIC || "train-command";
-const legoMotorMaxPower = parseInt(process.env.LEGO_MOTOR_MAX_POWER || "50", 10);
+const legoMotorFullPower = parseInt(process.env.LEGO_MOTOR_FULL_POWER || "100", 10);
+const legoMotorLowPower = parseInt(process.env.LEGO_MOTOR_LOW_POWER || "70", 10);
 
 // Action associated with each command id
 const actionMap = {
     // SpeedLimit_30
     0: async (motor, led, hub) => {
         console.log("Handling SpeedLimit_30...")
-        await motor.setPower(legoMotorMaxPower / 2);
+        await motor.setPower(legoMotorLowPower);
     },
     // SpeedLimit_50
     1: async (motor, led, hub) => {
         console.log("Handling SpeedLimit_50...")
-        await motor.setPower(legoMotorMaxPower);
+        await motor.setPower(legoMotorFullPower);
     },
     // TrafficSignalsAhead
     2: async (motor, led, hub) => {
@@ -26,7 +27,7 @@ const actionMap = {
     // PedestiranCrossingAhead
     3: async (motor, led, hub) => {
         console.log("Handling PedestiranCrossingAhead...")
-        await motor.rampPower(legoMotorMaxPower, 0, 2000);
+        await motor.rampPower(legoMotorFullPower, 0, 2000);
         await motor.brake();
     },
     // RedTrafficLight
@@ -43,7 +44,7 @@ const actionMap = {
             await led.setBrightness(0);
             await hub.sleep(250);
         }
-        await motor.rampPower(legoMotorMaxPower / 3, legoMotorMaxPower, 5000);
+        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
     }
 };
 
@@ -147,7 +148,7 @@ legoPoweredUp.on("discover", async (hub) => {
     console.log("All hardware pieces have been discovered!");
 
     // Start the train
-    await motorA.rampPower(legoMotorMaxPower / 3, legoMotorMaxPower, 5000);
+    await motorA.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
     actionInProgress = false;
 });
 
