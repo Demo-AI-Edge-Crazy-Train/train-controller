@@ -24,7 +24,7 @@ You will need:
 - Podman
 - Nodejs v20.7.0
 - MQTT broker (mosquitto docker image)
-- MQTT cli
+- MQTT cli (mosquitto)
 
 ### Local installation
 
@@ -41,7 +41,7 @@ protocol mqtt
 allow_anonymous true
 log_dest file /mosquitto/log/mosquitto.log
 EOF
-sudo dnf install -y mqttcli
+sudo dnf install -y mosquitto
 ```
 
 On macos
@@ -49,14 +49,14 @@ On macos
 ```sh
 mkdir -p /tmp/mosquitto/{config,data,log}
 tee /tmp/mosquitto/config/mosquitto.conf <<EOF
-    persistence true
-    persistence_location /mosquitto/data/
-    listener 1883 0.0.0.0
-    protocol mqtt
-    allow_anonymous true
-    log_dest file /mosquitto/log/mosquitto.log
+persistence true
+persistence_location /mosquitto/data/
+listener 1883 0.0.0.0
+protocol mqtt
+allow_anonymous true
+log_dest file /mosquitto/log/mosquitto.log
 EOF
-brew install hivemq/mqtt-cli/mqtt-cli
+brew install mosquitto
 ```
 
 Install package dependencies nodejs.
@@ -107,21 +107,42 @@ node ./index.js
 You should see something like this.
 
 ```
-Scanning for Hubs...
-connected to mqtt
-subscribed to topic  lego
+Connecting to MQTT broker mqtt://localhost:1883...
+Scanning for Lego PoweredUp Hubs...
+Connected to MQTT broker mqtt://localhost:1883!
+Subscribed to topic train-command!
+Discovered HUB NO.4!
+Connected to Lego Hub!
+All hardware pieces have been discovered!
 ```
 
-Send a command mqtt
+Send all MQTT commands sequentially.
 
 ```sh
-mqtt pub -t lego -m "0"
+for cmd in `seq 0 5`; do mosquitto_pub -h localhost -p 1883 -t train-command -m "$cmd"; sleep 10; done
 ```
 
 On the train-controller logs, you should see something like this.
 
 ```
-Speed Limit to 30 set power to 30
+Received message on MQTT topic train-command: 0
+Handling SpeedLimit_30...
+Processed command 0!
+Received message on MQTT topic train-command: 1
+Handling SpeedLimit_50...
+Processed command 1!
+Received message on MQTT topic train-command: 2
+Handling TrafficSignalsAhead...
+Processed command 2!
+Received message on MQTT topic train-command: 3
+Handling PedestiranCrossingAhead...
+Processed command 3!
+Received message on MQTT topic train-command: 4
+Handling RedTrafficLight...
+Processed command 4!
+Received message on MQTT topic train-command: 5
+Handling GreenTrafficLight...
+Processed command 5!
 ```
 
 ## Available commands
