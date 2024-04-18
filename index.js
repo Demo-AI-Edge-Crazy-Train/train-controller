@@ -7,6 +7,7 @@ const mqttBrokerUrl = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
 const mqttTopic = process.env.MQTT_TOPIC || "train-command";
 const legoMotorFullPower = parseInt(process.env.LEGO_MOTOR_FULL_POWER || "100", 10);
 const legoMotorLowPower = parseInt(process.env.LEGO_MOTOR_LOW_POWER || "70", 10);
+const legoSleepTime = parseInt(process.env.LEGO_SLEEP_TIME || "1000", 10);
 
 // Action associated with each command id
 const actionMap = {
@@ -20,6 +21,10 @@ const actionMap = {
             await led.setBrightness(0);
             await hub.sleep(250);
         }
+        // Add a 1-second break
+        await hub.sleep(legoSleepTime);
+        // Start the train again
+        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
     },
     // DangerAhead
     1: async (motor, led, hub) => {
@@ -31,6 +36,10 @@ const actionMap = {
             await led.setBrightness(0);
             await hub.sleep(250);
         }
+        // Add a 1-second break
+        await hub.sleep(legoSleepTime);
+        // Start the train again
+        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
     }
 };
 
@@ -96,6 +105,8 @@ mqttClient.on('message', (topic, payload) => {
     actionInProgress = true;
     action(legoGear.motor, legoGear.led, legoGear.hub).then(() => {
         console.log("Processed command %d!", actionCode);
+        // hub.sleep(legoSleepTime);
+        // console.log("Train slept for "+legoSleepTime);
     }).catch((e) => {
         console.log(e);
     }).finally(() => {
