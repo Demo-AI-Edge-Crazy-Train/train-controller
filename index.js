@@ -25,7 +25,7 @@ const actionMap = {
         // Add a 1-second break
         await hub.sleep(legoSleepTime);
         // Start the train again
-        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, legoRampUpTime);
+        await motor.setPower(legoMotorFullPower);
     },
     // DangerAhead
     1: async (motor, led, hub) => {
