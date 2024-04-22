@@ -8,6 +8,7 @@ const mqttTopic = process.env.MQTT_TOPIC || "train-command";
 const legoMotorFullPower = parseInt(process.env.LEGO_MOTOR_FULL_POWER || "100", 10);
 const legoMotorLowPower = parseInt(process.env.LEGO_MOTOR_LOW_POWER || "70", 10);
 const legoSleepTime = parseInt(process.env.LEGO_SLEEP_TIME || "1000", 10);
+const legoRampUpTime = parseInt(process.env.LEGO_RAMPUP_TIME || "1000", 10);
 
 // Action associated with each command id
 const actionMap = {
@@ -24,8 +25,7 @@ const actionMap = {
         // Add a 1-second break
         await hub.sleep(legoSleepTime);
         // Start the train again
-        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
-        lastActionCode = -1;
+        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, legoRampUpTime);
     },
     // DangerAhead
     1: async (motor, led, hub) => {
@@ -40,8 +40,7 @@ const actionMap = {
         // Add a 1-second break
         await hub.sleep(legoSleepTime);
         // Start the train again
-        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, 5000);
-        lastActionCode = -1;
+        await motor.rampPower(legoMotorLowPower, legoMotorFullPower, legoRampUpTime);
     }
 };
 
@@ -69,7 +68,6 @@ var legoGear = {
     motor: null,
     led: null
 };
-var lastActionCode = -1;
 var actionInProgress = true;
 mqttClient.on('message', (topic, payload) => {
     debug('Received message on MQTT topic %s: %s', topic, payload.toString());
@@ -90,20 +88,13 @@ mqttClient.on('message', (topic, payload) => {
         return;
     }
 
-    // Ignore duplicate commands
-    if (lastActionCode == actionCode) {
-        debug("Ignoring duplicate command %d!", actionCode);
-        return;
-    }
-
     // Do not accept commands if the previous one is still ongoing
     if (actionInProgress) {
-        debug("Ignoring command %d since the last one (%d) is still ongoing...", actionCode, lastActionCode);
+        debug("Ignoring command %d since the last one is still ongoing...", actionCode);
         return;
     }
 
     // Acting on the lego gear for real
-    lastActionCode = actionCode;
     actionInProgress = true;
     action(legoGear.motor, legoGear.led, legoGear.hub).then(() => {
         console.log("Processed command %d!", actionCode);
