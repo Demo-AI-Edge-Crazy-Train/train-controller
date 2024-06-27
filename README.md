@@ -111,9 +111,9 @@ Connecting to MQTT broker mqtt://localhost:1883...
 Scanning for Lego PoweredUp Hubs...
 Connected to MQTT broker mqtt://localhost:1883!
 Subscribed to topic train-command!
-Discovered HUB NO.4!
 Connected to Lego Hub!
 All hardware pieces have been discovered!
+Lego City Train #60337 reached max speed!
 ```
 
 Send all MQTT commands sequentially.
@@ -139,3 +139,13 @@ Processed command 1!
   0: "SpeedLimit_30",
   1: "DangerAhead",
   ```
+
+## Enabling the Mock
+
+If you do not have a proper Lego Hub, you can mock it.
+
+```sh
+export LEGO_BACKEND=mock
+export DEBUG="lego-gear-mock"
+node ./index.js
+```
